@@ -43,15 +43,16 @@ def on_submit():
                 row_tol = 9
             else:
                 row_tol = 2
-            
+
+            #read pdf table
             tables = camelot.read_pdf(pdf_file, flavor='stream', pages=page_number, table_areas = table_areas, row_tol = row_tol)
             for i, table in enumerate(tables, start=1):
                 df = table.df
 
-                # Delete all'.'
+                # Delete all'.' (they are just used as visual separator in German style reporting)
                 df = df.applymap(lambda x: x.replace('.', '') if isinstance(x, str) else x)
                 
-                # Replace all ',' with '.'
+                # Replace all ',' with '.' (to change from german decimal separator ',' to international style decimal separator '.')
                 df = df.applymap(lambda x: x.replace(',', '.') if isinstance(x, str) else x)
                 
                 # Apply transformations to each cell in the DataFrame
@@ -94,19 +95,21 @@ def on_submit():
     except Exception as e:
         result_label.config(text=f"Error: {e}")
 
-
+#some of the values have unnecessary periods infron of '-'. Those are delted here
 def adjust_negative_number(cell_value):
     if isinstance(cell_value, str) and re.match(r'\s*-.*', cell_value.strip()):
         return '-' + re.sub(r'\s+', '', cell_value.strip().lstrip('-'))
     return cell_value
 
 
-
+# function for browsing PDF documents in the GUI file browser
 def browse_pdf():
     file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
     entry_pdf.delete(0, tk.END)
     entry_pdf.insert(0, file_path)
 
+
+#----------------------Graphical User Interface (GUI)------------------------
 # Create the main window
 root = tk.Tk()
 root.title("PDF Table Extractor")
