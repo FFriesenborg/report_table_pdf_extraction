@@ -50,21 +50,22 @@ def on_submit():
             tables = camelot.read_pdf(pdf_file, flavor='stream', pages=page_number, table_areas = table_areas, row_tol = row_tol)
             for i, table in enumerate(tables, start=1):
                 df = table.df
+                # Old code using applymap
                 
                 #if deciaml separator is ',' delete '.' and exchange ',' for '.' to get standard format
                 if dec_separator == ',':
                     # Delete all'.' (they are just used as visual separator in German style reporting)
-                    df = df.applymap(lambda x: x.replace('.', '') if isinstance(x, str) else x)
+                    df = df.apply(lambda col: col.map(lambda x: x.replace('.', '') if isinstance(x, str) else x))
                     
                     # Replace all ',' with '.' (to change from german decimal separator ',' to international style decimal separator '.')
-                    df = df.applymap(lambda x: x.replace(',', '.') if isinstance(x, str) else x)
+                    df = df.apply(lambda col: col.map(lambda x: x.replace(',', '.') if isinstance(x, str) else x))
                 
                 else:
                     #if decimal operator is '.' delete all ','
-                    df = df.applymap(lambda x: x.replace(',', '') if isinstance(x, str) else x)
+                    df = df.apply(lambda col: col.map(lambda x: x.replace(',', '') if isinstance(x, str) else x))
                 
                 # Apply transformations to each cell in the DataFrame
-                df = df.applymap(lambda x: adjust_negative_number(x))
+                df = df.apply(lambda col: col.map(lambda x: adjust_negative_number(x)))
                 # Create a new worksheet for each table
                 ws = wb.create_sheet(title=f"Page_{page_number}_Table_{i}")
                 for row_data in df.values.tolist():
