@@ -1,3 +1,4 @@
+
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import camelot
@@ -11,6 +12,7 @@ def on_submit():
     pdf_file = entry_pdf.get()
     page_specification = entry_page.get()
     csv_file = entry_csv.get()
+    dec_separator = entry_sep.get()
 
     try:
         # Split the page specification if it contains a dash
@@ -48,12 +50,18 @@ def on_submit():
             tables = camelot.read_pdf(pdf_file, flavor='stream', pages=page_number, table_areas = table_areas, row_tol = row_tol)
             for i, table in enumerate(tables, start=1):
                 df = table.df
-
-                # Delete all'.' (they are just used as visual separator in German style reporting)
-                df = df.applymap(lambda x: x.replace('.', '') if isinstance(x, str) else x)
                 
-                # Replace all ',' with '.' (to change from german decimal separator ',' to international style decimal separator '.')
-                df = df.applymap(lambda x: x.replace(',', '.') if isinstance(x, str) else x)
+                #if deciaml separator is ',' delete '.' and exchange ',' for '.' to get standard format
+                if dec_separator == ',':
+                    # Delete all'.' (they are just used as visual separator in German style reporting)
+                    df = df.applymap(lambda x: x.replace('.', '') if isinstance(x, str) else x)
+                    
+                    # Replace all ',' with '.' (to change from german decimal separator ',' to international style decimal separator '.')
+                    df = df.applymap(lambda x: x.replace(',', '.') if isinstance(x, str) else x)
+                
+                else:
+                    #if decimal operator is '.' delete all ','
+                    df = df.applymap(lambda x: x.replace(',', '') if isinstance(x, str) else x)
                 
                 # Apply transformations to each cell in the DataFrame
                 df = df.applymap(lambda x: adjust_negative_number(x))
@@ -130,17 +138,23 @@ label_page.grid(row=1, column=0, padx=10, pady=5, sticky="E")
 entry_page = tk.Entry(root, width=30)  # Allow input of page range in the format 'start_page-end_page'
 entry_page.grid(row=1, column=1, padx=10, pady=5)
 
+label_sep = tk.Label(root, text="What is the decimal separator? \n Please enter (, or .) \n (default is .)")
+label_sep.grid(row=2, column=0, padx=10, pady=5, sticky="E")
+
+entry_sep = tk.Entry(root, width=30)
+entry_sep.grid(row=2, column=1, padx=10, pady=5)
+
 label_csv = tk.Label(root, text="Excel File: \n (default is pdf name with .xlsx extension)")
-label_csv.grid(row=2, column=0, padx=10, pady=5, sticky="E")
+label_csv.grid(row=3, column=0, padx=10, pady=5, sticky="E")
 
 entry_csv = tk.Entry(root, width=30)
-entry_csv.grid(row=2, column=1, padx=10, pady=5)
+entry_csv.grid(row=3, column=1, padx=10, pady=5)
 
 button_submit = tk.Button(root, text="Submit", command=on_submit)
-button_submit.grid(row=3, column=1, pady=10)
+button_submit.grid(row=4, column=1, pady=10)
 
 result_label = tk.Label(root, text="")
-result_label.grid(row=4, column=0, columnspan=3, pady=10)
+result_label.grid(row=5, column=0, columnspan=3, pady=10)
 
 # Start the main loop
 root.mainloop()
